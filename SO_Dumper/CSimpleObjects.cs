@@ -55,6 +55,9 @@ namespace SO_Dumper
         public AABB m_AABB;
 
         public SType_Render[] m_TypesRender;
+        public string MeshElement;
+
+        public SEntity[] m_Entities;
         public void Deserialize(Stream input)
         {
             m_NumEntitiesSum = Util.ReadValueU32(input);
@@ -103,12 +106,23 @@ namespace SO_Dumper
                     //section end, int, -1
                     _ = Util.ReadValueU32(input);
                     //Mesh Element, stringChrome
-                    _ = Util.ReadStringChrome(input, Encoding.ASCII);
-                    //Short IDK
+                    MeshElement = Util.ReadStringChrome(input, Encoding.ASCII);
+                    //Short Could be somehow related to mesh_spu, pretty sure always 00
                     _ = Util.ReadValueU16(input);
                 }
             }
+            if (m_NumEntitiesSum != 0)
+            {
+                m_Entities = new SEntity[m_NumEntitiesSum];
+                for (uint i = 0; i < m_NumEntitiesSum; i++)
+                {
+                    m_Entities[i] = new SEntity();
+                    m_Entities[i].Deserialize(input);
 
+                    //Discard pading pretty sure
+                    _ = Util.ReadValueU32(input);
+                }
+            }
         }
         public void Serialize(Stream output)
         {
@@ -121,6 +135,17 @@ namespace SO_Dumper
             Util.WriteU32(output, m_unk_4);
             Util.WriteU32(output, m_unk_5);
             Util.WriteFloat(output, m_MaxVisibilityRange);
+
+            m_Extents.Serialize(output);
+
+            for (uint i = 0; i < m_NumMeshes; i++)
+            {
+                m_TypesRender[i].Serialize(output);
+
+                Util.WriteS32(output, -1);
+                Util.WriteStringChrome(output, MeshElement, Encoding.ASCII);
+                Util.WriteU16(output, 0);
+            }
         }
 
         public override string ToString()
@@ -143,28 +168,37 @@ namespace SO_Dumper
             sb.AppendLine($"AABB: {m_AABB}");
             sb.AppendLine();
 
-            if (m_TypesRender != null && m_TypesRender.Length > 0)
-            {
-                for (int i = 0; i < m_TypesRender.Length; i++)
-                {
-                    /*
-                    sb.AppendLine($"Render Type {i}:");
-                    sb.AppendLine($"  Mesh: {m_TypesRender[i].Mesh}");
-                    sb.AppendLine($"  Skin: {m_TypesRender[i].Skin}");
-                    sb.AppendLine($"  Required Tags: {m_TypesRender[i].required_tags}");
-                    sb.AppendLine($"  Forbidden Tags: {m_TypesRender[i].forbidden_tags}");
-                    sb.AppendLine($"  Seed: {m_TypesRender[i].seed}");
-                    sb.AppendLine($"  Collision Collide Bits: {m_TypesRender[i].collision_collide_bits}");
-                    sb.AppendLine();
-                    */
-                    sb.AppendLine($"Render Type {i}:");
-                    sb.AppendLine($"{m_TypesRender[i]}");
-                }
-            }
-            else
+
+            if (m_TypesRender == null)
             {
                 sb.AppendLine("No Types Render data available.");
             }
+            for (int i = 0; i < m_TypesRender.Length; i++)
+            {
+                /*
+                sb.AppendLine($"Render Type {i}:");
+                sb.AppendLine($"  Mesh: {m_TypesRender[i].Mesh}");
+                sb.AppendLine($"  Skin: {m_TypesRender[i].Skin}");
+                sb.AppendLine($"  Required Tags: {m_TypesRender[i].required_tags}");
+                sb.AppendLine($"  Forbidden Tags: {m_TypesRender[i].forbidden_tags}");
+                sb.AppendLine($"  Seed: {m_TypesRender[i].seed}");
+                sb.AppendLine($"  Collision Collide Bits: {m_TypesRender[i].collision_collide_bits}");
+                sb.AppendLine();
+                */
+                sb.AppendLine($"Render Type {i}:");
+                sb.AppendLine($"{m_TypesRender[i]}");
+            }
+
+            if (m_Entities == null)
+            {
+                sb.AppendLine("No Types Render data available.");
+            }
+            for (int i = 0; i < m_Entities.Length; i++)
+            {
+                sb.AppendLine($"Entity {i}:");
+                sb.AppendLine($"{m_Entities[i]}");
+            }
+
 
             return sb.ToString();
         }

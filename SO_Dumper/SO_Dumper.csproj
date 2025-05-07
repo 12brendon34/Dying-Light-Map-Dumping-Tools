@@ -50,6 +50,7 @@
     <Compile Include="extents.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SEntity.cs" />
     <Compile Include="SObjFileOffsets.cs" />
     <Compile Include="SType_Render.cs" />
     <Compile Include="Util.cs" />

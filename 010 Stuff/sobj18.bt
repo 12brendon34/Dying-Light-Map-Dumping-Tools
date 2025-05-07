@@ -28,6 +28,14 @@ struct m128_f32 {
 struct m128_i16 {
     short s[4];
 };
+struct AABB{
+    float m_Extents_min_x; //rename or ignore
+    float m_Extents_min_y;
+    float m_Extents_min_z;
+    float m_Extents_max_x;
+    float m_Extents_max_y;
+    float m_Extents_max_z;
+};
 
 struct {
     char MagicID[4];
@@ -41,34 +49,15 @@ struct {
         uint Unk3;  //size = 36, releated to flag5 (usually the same as num_entity)
     } Sections;
 
-    struct {
-        uint m_NumEntitiesSum;
-        uint m_NumTypes;
-        uint m_NumMeshes;
-    } Flags;
 
-    struct { //let's go ahead and tuck these away
-        uint32 flag1;
-        uint32 flag2;
-        uint32 flag3;
-        uint32 flag4;
-        
-        local uint32 sum_of_flags = flag1 + flag2 + flag3 + flag4;
-        
-        uint32 flag5;
+    uint m_NumEntitiesSum;
+    uint m_NumTypes;
+    uint m_NumMeshes;
+    unsigned int m_NumCollisionNodes[4];
+    uint32 m_NumCollisionEntities;
 
-    } UnknownFlags;
-
-    float Unknown; // related to AABB I think
-    //axis-aligned bounding box stuff
-    struct {
-        float m_Extents_min_x;
-        float m_Extents_min_y;
-        float m_Extents_min_z;
-        float m_Extents_max_x;
-        float m_Extents_max_y;
-        float m_Extents_max_z;
-    } AABB;
+    float m_MaxVisibilityRange;
+    struct AABB m_Extents; //not actually aabb, same struct basically
 } header;
 
 
@@ -89,7 +78,7 @@ struct { //<optimize=false>; disables the grouping
         String MeshElement;
         short Unknown; //(pCVar25->m_MeshFile).field0_0x0 + 0x8c + lVar34
     
-    } Mesh[header.Flags.m_NumMeshes] <optimize=false>;
+    } Mesh[header.m_NumMeshes] <optimize=false>;
 } MeshGroup;
 
 
@@ -116,39 +105,19 @@ struct {
     uint color2;
     char unknown[0x4];
 
-} Entity[header.Flags.m_NumEntitiesSum];
+} Entity[header.m_NumEntitiesSum];
 
-/*
-// size = 48
-struct {
-    struct {
-        m128_f32 pos_s;
-        
-        //take from xform_alias, ususaly xform is two m128's, one holding 4 floats the other 4 shorts (then is cast to xform_alias)
-        //but it's easier to just have 4 shorts here.
-        short rx; //x
-        short ry; //y
-        short rz; //z
-        short rw; //Quaternion real part
-    } xform;
-
-
-    int16 Flags;
-    int16 Type;
-    int Color1;
-    int Color2;
-    
-    //the rest byte should be padding (align8)
-    FSkip( 4 );
-} Entity[header.Flags.m_NumEntitiesSum];
-*/
+//pre render batch
+//batch trees
+//typesPreRender
 
 //looks just like the start of Unknown_Data and Entity_Data, might also be a transformation matrix also then
 struct {
     float Unknown[7];
     ushort max_visibility_range;//?
     ushort sum_of_entity_flags;//?
-} BatchTrees[header.Flags.m_NumTypes]; //not sure if name is correct
+} BatchTrees[header.m_NumTypes]; //not sure if name is correct
+
 
 struct {
     short Field1;
@@ -172,24 +141,22 @@ struct {
     
     int16 unk0; //always 0
     int16 Index;
-} Mesh_Data[header.Flags.m_NumMeshes];
+} Mesh_Data[header.m_NumMeshes];
 
 
-
-
-//4x4 transformation matrix????
-
+//m_CollisionTree[4]
 struct {
-    //uchar bytes[32];
-    float unk[6];   //probably pos and rot
-    uint unk0;  //some kind of index, the max value is flag1 of unknown flag
-    uint unk1;  //its probably some bitfield shit
-} Unknown_Data[header.UnknownFlags.sum_of_flags];
+    struct AABB bbox;
 
+    uint right_child; 
+    uint data;
+} SCollisionNode[header.m_NumCollisionNodes[0] + header.m_NumCollisionNodes[1] + header.m_NumCollisionNodes[2] + header.m_NumCollisionNodes[3]];
+
+//m_CollisionEntities
 struct {
-    float unk[6];   //probably pos and rot
-    uint mesh_index;  //some kind of index?
-    uint unknown_flag;  //probably index in another file?
-    uint index;
-} Entity_Data[header.UnknownFlags.flag5];
-//stuff that could be things lol, CollisionEntities,BatchTasks,PreRender,PreRenderTypes,TypesRender,BatchTrees,m_NumBatchTreeNodes,m_NumPreRenderBatches
+    struct AABB aabb;
+
+    uint type_index;
+    uint flags;
+    uint entity_index;
+} SCollisionEntity[header.m_NumCollisionEntities];
