@@ -96,6 +96,5 @@ namespace SO_Dumper
                    $"  Color1: 0x{color1:X8}\n" +
                    $"  Color2: 0x{color2:X8}";
         }
-
     }
 }

@@ -58,6 +58,7 @@ namespace SO_Dumper
         public string MeshElement;
 
         public SEntity[] m_Entities;
+        public STreeNode[] m_BatchTrees;
         public void Deserialize(Stream input)
         {
             m_NumEntitiesSum = Util.ReadValueU32(input);
@@ -92,36 +93,39 @@ namespace SO_Dumper
                 z = m_Extents.max.z - m_AABB.origin.z,
             };
 
-            if (m_NumMeshes != 0)
+            m_TypesRender = new SType_Render[m_NumMeshes];
+            m_Entities = new SEntity[m_NumEntitiesSum];
+            m_BatchTrees = new STreeNode[m_NumTypes];
+
+            for (uint i = 0; i < m_TypesRender.Count(); i++)
             {
-                m_TypesRender = new SType_Render[m_NumMeshes];
+                m_TypesRender[i] = new SType_Render();
+                m_TypesRender[i].Deserialize(input);
 
-                for (uint i = 0; i < m_NumMeshes; i++)
-                {
-                    m_TypesRender[i] = new SType_Render();
-                    m_TypesRender[i].Deserialize(input);
+                m_TypesRender[i].collision_collide_bits = 0;
 
-
-                    //discard the following
-                    //section end, int, -1
-                    _ = Util.ReadValueU32(input);
-                    //Mesh Element, stringChrome
-                    MeshElement = Util.ReadStringChrome(input, Encoding.ASCII);
-                    //Short Could be somehow related to mesh_spu, pretty sure always 00
-                    _ = Util.ReadValueU16(input);
-                }
+                //discard the following
+                //section end, int, -1
+                _ = Util.ReadValueU32(input);
+                //Mesh Element, stringChrome
+                MeshElement = Util.ReadStringChrome(input, Encoding.ASCII);
+                //Short Could be somehow related to mesh_spu, pretty sure always 00
+                _ = Util.ReadValueU16(input);
             }
-            if (m_NumEntitiesSum != 0)
-            {
-                m_Entities = new SEntity[m_NumEntitiesSum];
-                for (uint i = 0; i < m_NumEntitiesSum; i++)
-                {
-                    m_Entities[i] = new SEntity();
-                    m_Entities[i].Deserialize(input);
 
-                    //Discard pading pretty sure
-                    _ = Util.ReadValueU32(input);
-                }
+            for (uint i = 0; i < m_Entities.Count(); i++)
+            {
+                m_Entities[i] = new SEntity();
+                m_Entities[i].Deserialize(input);
+
+                //Discard pading pretty sure
+                _ = Util.ReadValueU32(input);
+            }
+
+            for (uint i = 0; i < m_BatchTrees.Count(); i++)
+            {
+                m_BatchTrees[i] = new STreeNode();
+                m_BatchTrees[i].Deserialize(input);
             }
         }
         public void Serialize(Stream output)
@@ -197,6 +201,17 @@ namespace SO_Dumper
             {
                 sb.AppendLine($"Entity {i}:");
                 sb.AppendLine($"{m_Entities[i]}");
+            }
+
+
+            if (m_BatchTrees == null)
+            {
+                sb.AppendLine("No BatchTrees data available.");
+            }
+            for (int i = 0; i < m_BatchTrees.Length; i++)
+            {
+                sb.AppendLine($"BatchTrees {i}:");
+                sb.AppendLine($"{m_BatchTrees[i]}");
             }
 
 

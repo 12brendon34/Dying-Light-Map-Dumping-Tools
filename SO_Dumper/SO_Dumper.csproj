@@ -52,6 +52,8 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SEntity.cs" />
     <Compile Include="SObjFileOffsets.cs" />
+    <Compile Include="SPreRenderBatch.cs" />
+    <Compile Include="STreeNode.cs" />
     <Compile Include="SType_Render.cs" />
     <Compile Include="Util.cs" />
   </ItemGroup>

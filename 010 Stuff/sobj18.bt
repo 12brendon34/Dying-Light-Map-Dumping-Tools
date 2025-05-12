@@ -113,13 +113,24 @@ struct {
 
 //looks just like the start of Unknown_Data and Entity_Data, might also be a transformation matrix also then
 struct {
-    float Unknown[7];
+    float idk[3];
+
+    //SPreRenderBatch
+    short batch_tree_index;
+    short num_batch_tree_nodes;
+    short entity_index;
+    short num_entities;
+    short type_index;
+    short num_types;
+
+    uint Unknown;
     ushort max_visibility_range;//?
     ushort sum_of_entity_flags;//?
 } BatchTrees[header.m_NumTypes]; //not sure if name is correct
 
 
 struct {
+/*
     short Field1;
     hfloat Field2;
     float Field3;
@@ -141,7 +152,30 @@ struct {
     
     int16 unk0; //always 0
     int16 Index;
-} Mesh_Data[header.m_NumMeshes];
+*/
+
+/*
+    float discard[7];
+    hfloat idka;
+    hfloat idkb;
+    float discardd[4];
+*/
+
+    float origin[3];
+    float radius2;
+    float span[3];
+    hfloat UnkownA; //visibility_range2;??
+    hfloat UnkownB;
+    float geom_lod_distance2[3];
+
+/*
+0000002C     unsigned int max_geom_lod;
+00000030     float shader_lod_distance2[3];
+0000003C     unsigned __int16 type_index;
+0000003E     unsigned __int8 scene_layer;
+*/
+
+} SType_PreRender[header.m_NumMeshes];
 
 
 //m_CollisionTree[4]

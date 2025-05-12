@@ -88,12 +88,14 @@ struct {
 
     ObjectTransform Transform;
 
-
+    /*
     struct {
         byte Unknown[6];
         byte Flags[8];
         byte UnknownA[20];
     } flags;
+    */
+
 
     int bytesTillSectionEnd;
     byte HasMesh; //don't care about checking for this
