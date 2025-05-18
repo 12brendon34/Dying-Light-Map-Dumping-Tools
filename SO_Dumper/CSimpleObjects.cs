@@ -43,39 +43,40 @@ namespace SO_Dumper
         public uint m_NumEntitiesSum;
         public uint m_NumTypes;
         public uint m_NumMeshes;
-        public uint m_unk_1;
-        public uint m_unk_2;
-        public uint m_unk_3;
-        public uint m_unk_4;
-        public uint m_unk_5;
+        public uint[] m_NumCollisionNodes;
+        public uint m_NumCollisionEntities;
         public float m_MaxVisibilityRange; 
         
         public extents m_Extents;
-
-        public AABB m_AABB;
+        public aabb m_AABB;
 
         public SType_Render[] m_TypesRender;
-        public string MeshElement;
-
         public SEntity[] m_Entities;
         public STreeNode[] m_BatchTrees;
+        public SType_PreRender[] m_TypesPreRender;
+        public SCollisionNode[] m_CollisoinTree; //*m_CollisoinTree[4]
+        public SCollisionEntity[] m_CollisionEntities;
+
         public void Deserialize(Stream input)
         {
             m_NumEntitiesSum = Util.ReadValueU32(input);
             m_NumTypes = Util.ReadValueU32(input);
             m_NumMeshes = Util.ReadValueU32(input);
-            m_unk_1 = Util.ReadValueU32(input);
-            m_unk_2 = Util.ReadValueU32(input);
-            m_unk_3 = Util.ReadValueU32(input);
-            m_unk_4 = Util.ReadValueU32(input);
-            m_unk_5 = Util.ReadValueU32(input);
+
+            m_NumCollisionNodes = new uint[4];
+            m_NumCollisionNodes[0] = Util.ReadValueU32(input);
+            m_NumCollisionNodes[1] = Util.ReadValueU32(input);
+            m_NumCollisionNodes[2] = Util.ReadValueU32(input);
+            m_NumCollisionNodes[3] = Util.ReadValueU32(input);
+
+            m_NumCollisionEntities = Util.ReadValueU32(input);
             m_MaxVisibilityRange = Util.ReadFloat(input);
 
             m_Extents = new extents();
             m_Extents.Deserialize(input);
 
 
-            m_AABB = new AABB();
+            m_AABB = new aabb();
             //m_AABB.Deserialize(input);
 
 
@@ -96,21 +97,14 @@ namespace SO_Dumper
             m_TypesRender = new SType_Render[m_NumMeshes];
             m_Entities = new SEntity[m_NumEntitiesSum];
             m_BatchTrees = new STreeNode[m_NumTypes];
+            m_TypesPreRender = new SType_PreRender[m_NumMeshes];
+            m_CollisoinTree = new SCollisionNode[m_NumCollisionNodes[0] + m_NumCollisionNodes[1] + m_NumCollisionNodes[2] + m_NumCollisionNodes[3]];
+            m_CollisionEntities = new SCollisionEntity[m_NumCollisionEntities];
 
             for (uint i = 0; i < m_TypesRender.Count(); i++)
             {
                 m_TypesRender[i] = new SType_Render();
                 m_TypesRender[i].Deserialize(input);
-
-                m_TypesRender[i].collision_collide_bits = 0;
-
-                //discard the following
-                //section end, int, -1
-                _ = Util.ReadValueU32(input);
-                //Mesh Element, stringChrome
-                MeshElement = Util.ReadStringChrome(input, Encoding.ASCII);
-                //Short Could be somehow related to mesh_spu, pretty sure always 00
-                _ = Util.ReadValueU16(input);
             }
 
             for (uint i = 0; i < m_Entities.Count(); i++)
@@ -127,17 +121,38 @@ namespace SO_Dumper
                 m_BatchTrees[i] = new STreeNode();
                 m_BatchTrees[i].Deserialize(input);
             }
+            //SType_PreRender[header.m_NumMeshes];
+
+            for (uint i = 0; i < m_TypesPreRender.Count(); i++)
+            {
+                m_TypesPreRender[i] = new SType_PreRender();
+                m_TypesPreRender[i].Deserialize(input);
+            }
+
+
+            //SCollisionNode[header.m_NumCollisionNodes[0] + header.m_NumCollisionNodes[1] + header.m_NumCollisionNodes[2] + header.m_NumCollisionNodes[3]];
+            for (uint i = 0; i < m_CollisoinTree.Count(); i++)
+            {
+                m_CollisoinTree[i] = new SCollisionNode();
+                m_CollisoinTree[i].Deserialize(input);
+            }
+
+            for (uint i = 0; i < m_CollisionEntities.Count(); i++)
+            {
+                m_CollisionEntities[i] = new SCollisionEntity();
+                m_CollisionEntities[i].Deserialize(input);
+            }
         }
         public void Serialize(Stream output)
         {
             Util.WriteU32(output, m_NumEntitiesSum);
             Util.WriteU32(output, m_NumTypes);
             Util.WriteU32(output, m_NumMeshes);
-            Util.WriteU32(output, m_unk_1);
-            Util.WriteU32(output, m_unk_2);
-            Util.WriteU32(output, m_unk_3);
-            Util.WriteU32(output, m_unk_4);
-            Util.WriteU32(output, m_unk_5);
+            Util.WriteU32(output, m_NumCollisionNodes[0]);
+            Util.WriteU32(output, m_NumCollisionNodes[1]);
+            Util.WriteU32(output, m_NumCollisionNodes[2]);
+            Util.WriteU32(output, m_NumCollisionNodes[3]);
+            Util.WriteU32(output, m_NumCollisionEntities);
             Util.WriteFloat(output, m_MaxVisibilityRange);
 
             m_Extents.Serialize(output);
@@ -145,10 +160,38 @@ namespace SO_Dumper
             for (uint i = 0; i < m_NumMeshes; i++)
             {
                 m_TypesRender[i].Serialize(output);
+            }
 
-                Util.WriteS32(output, -1);
-                Util.WriteStringChrome(output, MeshElement, Encoding.ASCII);
-                Util.WriteU16(output, 0);
+            // SEntity
+            for (uint i = 0; i < m_NumEntitiesSum; i++)
+            {
+                m_Entities[i].Serialize(output);
+                Util.WriteU32(output, 0); // padding
+            }
+
+            // STreeNode
+            for (uint i = 0; i < m_NumTypes; i++)
+            {
+                m_BatchTrees[i].Serialize(output);
+            }
+
+            // SType_PreRender
+            for (uint i = 0; i < m_NumMeshes; i++)
+            {
+                m_TypesPreRender[i].Serialize(output);
+            }
+
+            // SCollisionNode
+            uint numCollisionNodesTotal = m_NumCollisionNodes[0] + m_NumCollisionNodes[1] + m_NumCollisionNodes[2] + m_NumCollisionNodes[3];
+            for (uint i = 0; i < numCollisionNodesTotal; i++)
+            {
+                m_CollisoinTree[i].Serialize(output);
+            }
+
+            // SCollisionEntity
+            for (uint i = 0; i < m_NumCollisionEntities; i++)
+            {
+                m_CollisionEntities[i].Serialize(output);
             }
         }
 
@@ -160,11 +203,6 @@ namespace SO_Dumper
             sb.AppendLine($"NumEntitiesSum: {m_NumEntitiesSum}");
             sb.AppendLine($"NumTypes: {m_NumTypes}");
             sb.AppendLine($"NumMeshes: {m_NumMeshes}");
-            sb.AppendLine($"Unknown 1: {m_unk_1}");
-            sb.AppendLine($"Unknown 2: {m_unk_2}");
-            sb.AppendLine($"Unknown 3: {m_unk_3}");
-            sb.AppendLine($"Unknown 4: {m_unk_4}");
-            sb.AppendLine($"Unknown 5: {m_unk_5}");
             sb.AppendLine();
 
             sb.AppendLine($"MaxVisibilityRange: {m_MaxVisibilityRange}");
@@ -175,27 +213,17 @@ namespace SO_Dumper
 
             if (m_TypesRender == null)
             {
-                sb.AppendLine("No Types Render data available.");
+                sb.AppendLine("No Types Render data.");
             }
             for (int i = 0; i < m_TypesRender.Length; i++)
             {
-                /*
-                sb.AppendLine($"Render Type {i}:");
-                sb.AppendLine($"  Mesh: {m_TypesRender[i].Mesh}");
-                sb.AppendLine($"  Skin: {m_TypesRender[i].Skin}");
-                sb.AppendLine($"  Required Tags: {m_TypesRender[i].required_tags}");
-                sb.AppendLine($"  Forbidden Tags: {m_TypesRender[i].forbidden_tags}");
-                sb.AppendLine($"  Seed: {m_TypesRender[i].seed}");
-                sb.AppendLine($"  Collision Collide Bits: {m_TypesRender[i].collision_collide_bits}");
-                sb.AppendLine();
-                */
                 sb.AppendLine($"Render Type {i}:");
                 sb.AppendLine($"{m_TypesRender[i]}");
             }
 
             if (m_Entities == null)
             {
-                sb.AppendLine("No Types Render data available.");
+                sb.AppendLine("No Types Render data.");
             }
             for (int i = 0; i < m_Entities.Length; i++)
             {
@@ -206,12 +234,22 @@ namespace SO_Dumper
 
             if (m_BatchTrees == null)
             {
-                sb.AppendLine("No BatchTrees data available.");
+                sb.AppendLine("No BatchTrees data.");
             }
             for (int i = 0; i < m_BatchTrees.Length; i++)
             {
                 sb.AppendLine($"BatchTrees {i}:");
                 sb.AppendLine($"{m_BatchTrees[i]}");
+            }
+
+            if (m_TypesPreRender == null)
+            {
+                sb.AppendLine("No Types PreRender data.");
+            }
+            for (int i = 0; i < m_TypesPreRender.Length; i++)
+            {
+                sb.AppendLine($"TypesPreRender {i}:");
+                sb.AppendLine($"{m_TypesPreRender[i]}");
             }
 
 

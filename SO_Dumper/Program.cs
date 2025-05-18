@@ -43,9 +43,41 @@ namespace SO_Dumper
                     var SObjects = new CSimpleObjects();
                     SObjects.Deserialize(input);
 
-                    Console.Write(SObjects.ToString());
+                    for (uint i = 0; i < SObjects.m_Entities.Count(); i++)
+                    {
+                        Console.WriteLine(SObjects.m_Entities[i]);
+                        Console.WriteLine(SObjects.m_TypesRender[SObjects.m_Entities[i].type]);
+                        //Console.WriteLine(SObjects.m_TypesPreRender[SObjects.m_Entities[i].type]);
+                    }
+
+
+
+                    //Console.Write(SObjects.ToString());
+
+
+
+
+                    //replace every mesh with forklift
+                    /*
+                    for (uint i = 0; i < SObjects.m_TypesRender.Count(); i++)
+                    {
+                        SObjects.m_TypesRender[i].Mesh = "forklift.msh";
+                        SObjects.m_TypesRender[i].Skin = "Default";
+                        SObjects.m_TypesRender[i].MeshElement = "forklift";
+
+                        SObjects.m_TypesPreRender[i].lodcount = 0; //lod
+
+                    }
+
+                    using (var output = File.OpenWrite("OutTest.sobj"))
+                    {
+                        Util.WriteString(output, "SO18", Encoding.ASCII);
+                        offsets.Serialize(output);
+                        SObjects.Serialize(output);
+                    }
+                    */
                 }
-            }
+                }
         }
     }
 }

@@ -20,6 +20,9 @@ namespace SO_Dumper
         //public uint collision_category_bits;
         public uint collision_collide_bits;
 
+        public uint UnknownA;
+        public string MeshElement;
+        public ushort UnknownB;
         public void Deserialize(Stream input)
         {
             Mesh = Util.ReadStringChrome(input, Encoding.ASCII);
@@ -32,6 +35,15 @@ namespace SO_Dumper
 
             //collision_category_bits = Util.ReadValueU32(input); //CE5 only?
             collision_collide_bits = Util.ReadValueU32(input);
+
+
+
+            //may technically be a seperate section or smt
+            UnknownA = Util.ReadValueU32(input);
+            MeshElement = Util.ReadStringChrome(input, Encoding.ASCII);
+
+            //Short Could be somehow related to mesh_spu
+            UnknownB = Util.ReadValueU16(input);
         }
         public void Serialize(Stream output)
         {
@@ -45,6 +57,14 @@ namespace SO_Dumper
 
             //Util.WriteU32(output, collision_category_bits);
             Util.WriteU32(output, collision_collide_bits);
+
+
+
+
+            //other section??
+            Util.WriteU32(output, UnknownA);
+            Util.WriteStringChrome(output, MeshElement, Encoding.ASCII);
+            Util.WriteU16(output, UnknownB);
         }
         public override string ToString()
         {

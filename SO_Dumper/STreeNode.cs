@@ -27,14 +27,14 @@ namespace SO_Dumper
         */
            
         //prob vec3 origin
-        Unsure SomeFloatStruct;
+        public Unsure SomeFloatStruct;
 
         //SPreRenderBatch
-        SPreRenderBatch m_PreRenderBatch;
+        public SPreRenderBatch m_PreRenderBatch;
 
-        uint Unknown;
-        ushort max_visibility_range;
-        ushort sum_of_entity_flags;
+        public uint Unknown;
+        public ushort max_visibility_range;
+        public ushort sum_of_entity_flags;
 
         public void Deserialize(Stream input)
         {

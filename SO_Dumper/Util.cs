@@ -17,8 +17,6 @@ namespace SO_Dumper
             public override string ToString() => $"(x: {x}, y: {y}, z: {z})";
         }
 
-
-
         public static string ReadString(Stream stream, Encoding encoding, int size)
         {
             using (BinaryReader reader = new BinaryReader(stream, Encoding.Default, leaveOpen: true))

@@ -8,7 +8,7 @@ using static SO_Dumper.Util;
 
 namespace SO_Dumper
 {
-    internal class AABB
+    internal class aabb
     {
         public vec3 origin;
         public vec3 span;

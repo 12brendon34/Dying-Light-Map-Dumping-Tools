@@ -103,6 +103,8 @@ struct {
     ushort type;
     uint color1;
     uint color2;
+
+    //2 shorts
     char unknown[0x4];
 
 } Entity[header.m_NumEntitiesSum];
@@ -164,9 +166,11 @@ struct {
     float origin[3];
     float radius2;
     float span[3];
-    hfloat UnkownA; //visibility_range2;??
-    hfloat UnkownB;
+    //hfloat UnkownA; //visibility_range2;??
+    //hfloat UnkownB;
+    float UnknownA;
     float geom_lod_distance2[3];
+    uint UnkownB;//??
 
 /*
 0000002C     unsigned int max_geom_lod;
